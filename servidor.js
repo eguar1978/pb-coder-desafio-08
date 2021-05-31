@@ -1,57 +1,54 @@
-const express = require('express');
-const fs = require('fs');
+const express = require('express')
+const productos = require('./api/productos')
 
+// creo una app de tipo express
+const app = express()
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-function obtenerRandom(min, max) {
-    return ((Math.random() * (max - min)) + min);
-}
+app.get('/api/productos/listar', (req, res) => {
+  const prods = productos.listar()
 
-const ruta = "./productos.txt";
+  if (prods.length === 0) {
+    throw new Error('No hay productos cargados')
+  }
+  res.json(prods)
+})
 
+app.get('/api/productos/listar/:id', (req, res) => {
+  const { id } = req.params
+  const producto = productos.obtener(Number(id))
 
-const app = express();
-const puerto = 8080;
-const visitas = new Object();
-visitas.items = 0;
-visitas.items_random = 0;
+  if (producto === undefined) throw new Error('producto no encontrado')
 
+  res.json(producto)
+})
 
-app.get('/items', (req, res) => {
+app.post('/api/productos/guardar', (req, res) => {
+  const { title, price, thumbnail, stock } = req.body
+  const producto = productos.guardar({
+    title: title,
+    price: price,
+    thumbnail: thumbnail,
+    stock: stock
+  })
+  res.status(201).json(producto)
+})
 
-    visitas.items++;
-    async function read(ruta) {
-        try {
-            const archivo = await fs.promises.readFile(ruta);
-            res.send(JSON.parse(archivo));
-        } catch (err) {
-            res.send("No hay productos en este momento");
-        }
-    }
-    read(ruta);
+// Middleware para manejar errores
 
-});
+app.use((error, req, res, next) => {
+  res.status(400).json({ error: error.message })
+})
 
-app.get('/items-random', (req, res) => {
-    visitas.items_random++;
-    async function read(ruta) {
-        try {
-            const archivo = await fs.promises.readFile(ruta);
-            largoArray = JSON.parse(archivo).length - 1;
-            res.send(JSON.parse(archivo)[obtenerRandom(0, largoArray).toFixed(0)]);
-        } catch (err) {
-            res.send("No hay productos en este momento");
-        }
-    }
-    read(ruta);
-});
-
-
-
-app.get('/visitas', (req, res) => {
-    //const fechaHora = moment().format('YYYY/MM/DD h:mm:ss');
-    res.send(visitas);
-});
+// pongo a escuchar el servidor en el puerto indicado
+const puerto = 8080
 
 const server = app.listen(puerto, () => {
-    console.log(`Servidor iniciado en el puerto http://localhost:${puerto}`)
+  console.log(`servidor escuchando en http://localhost:${puerto}`)
+})
+
+// en caso de error, avisar
+server.on('error', error => {
+  console.log('error en el servidor:', error)
 })
