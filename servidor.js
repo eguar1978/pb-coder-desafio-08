@@ -1,54 +1,46 @@
-const express = require('express')
-const productos = require('./api/productos')
+const express = require('express');
+const productos = require('./api/productos');
 
-// creo una app de tipo express
-const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/productos/listar', (req, res) => {
-  const prods = productos.listar()
+  const products = productos.listar();
 
-  if (prods.length === 0) {
-    throw new Error('No hay productos cargados')
+  if (products.length === 0) {
+    throw new Error('Al momento no hay productos cargados');
   }
-  res.json(prods)
+  res.json(products);
 })
 
 app.get('/api/productos/listar/:id', (req, res) => {
-  const { id } = req.params
-  const producto = productos.obtener(Number(id))
-
-  if (producto === undefined) throw new Error('producto no encontrado')
-
-  res.json(producto)
+  const { id } = req.params;
+  const product = productos.obtener(Number(id));
+  if (product === undefined) throw new Error('producto no encontrado');
+  res.json(product);
 })
 
 app.post('/api/productos/guardar', (req, res) => {
-  const { title, price, thumbnail, stock } = req.body
-  const producto = productos.guardar({
-    title: title,
-    price: price,
-    thumbnail: thumbnail,
-    stock: stock
-  })
-  res.status(201).json(producto)
+  const { title, price, thumbnail, stock } = req.body;
+  const product = productos.guardar({title: title, price: price, thumbnail: thumbnail, stock: stock});
+  res.status(201).json(product);
 })
 
-// Middleware para manejar errores
+// Para manejar errores
 
 app.use((error, req, res, next) => {
-  res.status(400).json({ error: error.message })
+  res.status(400).json({ error: error.message });
 })
 
-// pongo a escuchar el servidor en el puerto indicado
-const puerto = 8080
+// El servidor escucha en el puerto indicado
+const puerto = 8080;
 
 const server = app.listen(puerto, () => {
-  console.log(`servidor escuchando en http://localhost:${puerto}`)
+  console.log(`servidor escuchando en http://localhost:${puerto}`);
 })
 
-// en caso de error, avisar
+// Error
 server.on('error', error => {
-  console.log('error en el servidor:', error)
+  console.log('error en el servidor:', error);
 })
